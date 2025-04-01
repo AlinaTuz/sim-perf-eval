@@ -1,5 +1,9 @@
 import numpy as np
 
+rng = np.random.Generator(np.random.MT19937(
+    np.random.SeedSequence(1234)
+))
+
 # Simulation parameters
 num_simulations = 1000000  # Number of trials (large number for better accuracy)
 mu = 1.0                 # Mean for the exponential distribution
@@ -8,8 +12,8 @@ high_uniform = 5.0       # Upper bound for the uniform distribution
 probability_mean = 0
 
 # Generate random variates
-exponential_RV = np.random.exponential(scale=mu, size=num_simulations)
-uniform_RV = np.random.uniform(low=low_uniform, high=high_uniform, size=num_simulations)
+exponential_RV = rng.exponential(scale=mu, size=num_simulations)
+uniform_RV = rng.uniform(low=low_uniform, high=high_uniform, size=num_simulations)
 
 # Calculate the probability
 probability_mean = np.mean(exponential_RV > uniform_RV)

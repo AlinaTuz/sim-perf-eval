@@ -1,23 +1,29 @@
 import numpy as np
 
+# Initialization of the random number generator
+
+rng = np.random.Generator(np.random.MT19937(
+    np.random.SeedSequence(1234)
+))
+
 # Selection of a random Gaussian distribution
 
 def select_gauss_random():
     # We first generate a random number u on [0,1]
 
-    u = np.random.uniform()
+    u = rng.uniform()
 
     # We then select a Gaussian distribution
     # according to the value of u
 
     if u <= 0.15:
-        return np.random.normal(-2, np.sqrt(2))
+        return rng.normal(-2, np.sqrt(2))
     elif u <= 0.4:
-        return np.random.normal(4, 1)
+        return rng.normal(4, 1)
     elif u <= 0.75:
-        return np.random.normal(10, np.sqrt(3))
+        return rng.normal(10, np.sqrt(3))
     else:
-        return np.random.normal(15, np.sqrt(2))
+        return rng.normal(15, np.sqrt(2))
 
 # Computation of the mean
 

@@ -1,9 +1,5 @@
 import numpy as np
 
-rng = np.random.Generator(np.random.MT19937(
-    np.random.SeedSequence(1234)
-))
-
 def uniform_dist(low, high, x):
     if x < low:
         return 0
@@ -95,7 +91,11 @@ tests = []
 p_values = []
 
 for i in range(iterations):
-    print(i)
+    #print(i)
+
+    rng = np.random.Generator(np.random.MT19937(
+        np.random.SeedSequence(1000 + i)
+    ))
 
     arrival_times = rng.uniform(low=0, high=T, size=N)
 
@@ -134,7 +134,11 @@ tests = []
 p_values = []
 
 for i in range (iterations):
-    print(i)
+    #print(i)
+
+    rng = np.random.Generator(np.random.MT19937(
+        np.random.SeedSequence(1000 + i)
+    ))
 
     inter_arrival_times = rng.exponential(scale=1/rate, size=N)
 

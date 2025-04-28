@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import norm
 
 def uniform_dist(low, high, x):
     if x < low:
@@ -83,12 +84,16 @@ rate = 5
 T = 2000
 N = 10000
 
+z = norm.ppf(0.975)  # 95% CI z-value
+
 # Method 1: Drawing N arrival times uniformly at random in the interval [0,T]
 
 iterations = 500
 
 tests = []
 p_values = []
+
+print("###### Method 1: Drawing N arrival times uniformly at random in the interval [0,T] ######")
 
 for i in range(iterations):
     #print(i)
@@ -125,8 +130,19 @@ for i in range(iterations):
     p_value = successes / draws
     p_values.append(p_value)
 
+t_mean = np.mean(tests)
+t_std_err = np.std(tests, ddof=1) / np.sqrt(iterations)
+t_ci_mean_analytical = (t_mean - z * t_std_err, t_mean + z * t_std_err)
+
 print(f"Average test statistic T after {iterations} iterations: {np.mean(tests)}")
+print(f"--> Confidence interval of 95 %: {t_ci_mean_analytical}")
+
+p_mean = np.mean(p_values)
+p_std_err = np.std(p_values, ddof=1) / np.sqrt(iterations)
+p_ci_mean_analytical = (p_mean - z * p_std_err, p_mean + z * p_std_err)
+
 print(f"Average p-value after {iterations} iterations: {np.mean(p_values)}")
+print(f"--> Confidence interval of 95 %: {p_ci_mean_analytical}")
 
 # Method 2: Drawing a set of N exponential inter-arrival times of average value 1/λ in the interval [0, T]
 
@@ -134,6 +150,8 @@ iterations = 500
 
 tests = []
 p_values = []
+
+print("###### Method 2: Drawing a set of N exponential inter-arrival times of average value 1/λ in the interval [0, T] ######")
 
 for i in range(iterations):
     #print(i)
@@ -178,5 +196,16 @@ for i in range(iterations):
     p_value = successes / draws
     p_values.append(p_value)
 
+t_mean = np.mean(tests)
+t_std_err = np.std(tests, ddof=1) / np.sqrt(iterations)
+t_ci_mean_analytical = (t_mean - z * t_std_err, t_mean + z * t_std_err)
+
 print(f"Average test statistic T after {iterations} iterations: {np.mean(tests)}")
+print(f"--> Confidence interval of 95 %: {t_ci_mean_analytical}")
+
+p_mean = np.mean(p_values)
+p_std_err = np.std(p_values, ddof=1) / np.sqrt(iterations)
+p_ci_mean_analytical = (p_mean - z * p_std_err, p_mean + z * p_std_err)
+
 print(f"Average p-value after {iterations} iterations: {np.mean(p_values)}")
+print(f"--> Confidence interval of 95 %: {p_ci_mean_analytical}")

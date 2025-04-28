@@ -80,8 +80,8 @@ def exponential_test_statistic(samples, k, rate):
 # Parameters
 
 rate = 5
-T = 200
-N = 1000
+T = 2000
+N = 10000
 
 # Method 1: Drawing N arrival times uniformly at random in the interval [0,T]
 
@@ -103,6 +103,8 @@ for i in range(iterations):
 
     inter_arrival_times = [arrival_times[0]]
     inter_arrival_times.extend([arrival_times[i+1] - arrival_times[i] for i in range(N-1)])
+
+    #print(sum(inter_arrival_times))
 
     # Chi-squared test: show that the inter-arrival times of method 1 are also exponentially distributed
 
@@ -133,14 +135,24 @@ iterations = 500
 tests = []
 p_values = []
 
-for i in range (iterations):
+for i in range(iterations):
     #print(i)
 
     rng = np.random.Generator(np.random.MT19937(
         np.random.SeedSequence(1000 + i)
     ))
 
-    inter_arrival_times = rng.exponential(scale=1/rate, size=N)
+    inter_arrival_times = []
+
+    for j in range(N):
+        time = rng.exponential(scale=1/rate)
+
+        while time < 0 or time > T:
+            time = rng.exponential(scale=1/rate)
+
+        inter_arrival_times.append(time)
+
+    #print(sum(inter_arrival_times))
 
     arrival_times = [inter_arrival_times[0]]
 

@@ -169,3 +169,47 @@ plt.grid(True)
 
 plt.tight_layout()
 plt.show()
+
+# Facultative:
+# BIC computation function
+def compute_bic(log_likelihood, num_params, num_data_points):
+    return -2 * log_likelihood + num_params * np.log(num_data_points)
+
+# Log-likelihood function for GMM
+def log_likelihood_gmm(data, dists):
+    log_likelihood = 0
+    for x in data:
+        prob_sum = 0
+        for d in dists:
+            mean = d['mean']
+            var = d['var']
+            prob = d['prob']
+            prob_sum += prob / (np.sqrt(2 * np.pi * var)) * np.exp(-((x - mean) ** 2) / (2 * var))
+        log_likelihood += np.log(prob_sum)
+    return log_likelihood
+
+# Try different numbers of distributions
+bic_scores = []
+max_components = 6
+for k in range(1, max_components + 1):
+    dists_k, _ = expectation_maximization(detrended, k, 30)
+    log_likelihood = log_likelihood_gmm(detrended, dists_k)
+    # Each Gaussian has 3 parameters: mean, variance, and probability
+    num_params = 3 * k - 1 
+    bic = compute_bic(log_likelihood, num_params, len(detrended))
+    bic_scores.append(bic)
+    print(f'k = {k}, BIC = {bic:.2f}')
+
+# Determine best k
+best_k = np.argmin(bic_scores) + 1
+print(f'\nOptimal number of Gaussian distributions according to BIC: {best_k}')
+
+# Optional: plot BIC values
+plt.figure(figsize=(6, 4))
+plt.plot(range(1, max_components + 1), bic_scores, marker='o', linestyle='-')
+plt.title('BIC vs Number of Gaussian Components')
+plt.xlabel('Number of Gaussian Components')
+plt.ylabel('BIC')
+plt.grid(True)
+plt.tight_layout()
+plt.show()

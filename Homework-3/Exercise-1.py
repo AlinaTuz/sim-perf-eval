@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 # Random generator
 rng = np.random.Generator(np.random.MT19937(np.random.SeedSequence(1234)))
@@ -25,7 +26,7 @@ def expectation_maximization(data, nb_dist, nb_iter):
     # Initial assumption
     dists = []
     for d in range(nb_dist):
-        dists.append({'mean': (nb_dist / 2) - d, 'var': 1, 'prob': 1/3})
+        dists.append({'mean': (nb_dist // 2) - d, 'var': 1, 'prob': 1/3})
 
     # Iterative computation of the parameters
     for i in range(nb_iter):
@@ -152,9 +153,16 @@ for k in range(3):
     print(f"Gaussian distribution #{k+1}:\t Mean: {dists[k]['mean']}\t Variance: {dists[k]['var']}")
 
 plt.plot()
-plt.hist(detrended, bins=20, color='lightgray', edgecolor='black')
-plt.hist(assignments, bins=20, color=['blue', 'red', 'green'], rwidth=1/2, edgecolor='black', stacked=True)
-plt.title('Histogram of the 3 Gaussian Distributions Obtained with Expectation-Maximization Algorithm')
+plt.hist(detrended, bins=20, density=True, color='lightgray', edgecolor='black')
+
+colors = ['blue', 'red', 'green']
+
+x = np.linspace(min(detrended), max(detrended), 100)
+
+for k in range(3):
+    plt.plot(x, dists[k]['prob'] * norm.pdf(x, dists[k]['mean'], np.sqrt(dists[k]['var'])), color=colors[k], linewidth=2)
+
+plt.title('Normalized Histogram of the 3 Gaussian Distributions\nObtained with Expectation-Maximization Algorithm')
 plt.xlabel('Residual Value')
 plt.ylabel('Frequency')
 plt.grid(True)

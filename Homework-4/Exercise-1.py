@@ -26,8 +26,7 @@ class MM1:
         self.clock = 0
 
         # Initialization of event queue
-        self.events = [(rng.exponential(arrival_rate), 'arrival')]
-        self.events.sort()
+        self.events = [(rng.exponential(1/arrival_rate), 'arrival')]
 
         # Initialization of system state
         self.busy = 0 # The server is free
@@ -41,10 +40,15 @@ class MM1:
     # Report generator
 
     def report_generator(self, display):
-        print(self.times)
-        print(self.nbs_packets)
+        # print(self.times)
+        # print(self.nbs_packets)
 
         # Compute estimates of interest
+
+        avg_packets = self.nbs_packets[0] * self.times[0]
+
+        for i in range(1, len(self.times)):
+            avg_packets += self.nbs_packets[i] * (self.times[i] - self.times[i-1])
         
         # Write report
         if display:
@@ -54,6 +58,8 @@ class MM1:
             plt.ylabel('Number of packets in the system (server + queue)')
             plt.grid(True)
             plt.show()
+
+        return avg_packets / max(self.times)
 
     # Simulation executive
 
@@ -71,9 +77,9 @@ class MM1:
             if i[1] == 'arrival':
                 self.packet_arrival(arrival_rate, departure_rate)
             elif i[1] == 'departure':
-                self.packet_departure(arrival_rate, departure_rate)
+                self.packet_departure(departure_rate)
 
-            print(self.events)
+            #print(self.events)
 
         # Report generator
         return self.report_generator(display)
@@ -82,7 +88,7 @@ class MM1:
 
     def packet_arrival(self, arrival_rate, departure_rate):
         # Schedule next arrival
-        self.events.append((self.clock + rng.exponential(arrival_rate), 'arrival'))
+        self.events.append((self.clock + rng.exponential(1/arrival_rate), 'arrival'))
         self.events.sort()
 
         # Update statistical counters
@@ -96,12 +102,10 @@ class MM1:
             self.busy += 1
 
             # Schedule next departure
-            self.events.append((self.clock + rng.exponential(departure_rate), 'departure'))
+            self.events.append((self.clock + rng.exponential(1/departure_rate), 'departure'))
             self.events.sort()
 
-        print(self.busy, " ", self.queue)
-
-    def packet_departure(self, arrival_rate, departure_rate):
+    def packet_departure(self, departure_rate):
         # Update statistical counters
         self.times.append(self.clock)
         self.nbs_packets.append(self.queue)
@@ -113,14 +117,36 @@ class MM1:
             self.queue -= 1
 
             # Schedule next departure
-            self.events.append((self.clock + rng.exponential(departure_rate), 'departure'))
+            self.events.append((self.clock + rng.exponential(1/departure_rate), 'departure'))
             self.events.sort()
 
-        print(self.busy, " ", self.queue)
+
+lam = 1
+mu = 2
 
 # Example on one run
 
 sim = MM1()
-sim.run_simulation(max_time=1000, arrival_rate=1, departure_rate=2, display=True)
+avg_packets = sim.run_simulation(max_time=1000, arrival_rate=lam, departure_rate=mu, display=True)
 
 # Computation of the average number of packets in the system
+
+z = norm.ppf(0.975)  # 95% CI z-value
+
+nb_runs = 10000
+avg_nb_packets = []
+
+for _ in range(nb_runs):
+    sim = MM1()
+    avg_nb_packets.append(sim.run_simulation(max_time=1000, arrival_rate=lam, departure_rate=mu, display=False))
+
+mean = np.mean(avg_nb_packets)
+std_err = np.std(avg_nb_packets, ddof=1) / np.sqrt(nb_runs)
+ci_mean_analytical = (mean - z * std_err, mean + z * std_err)
+
+print(f"Average number of packets in the system: {mean}")
+print(f"--> Confidence interval of 95 %: {ci_mean_analytical}")
+
+rho = lam / mu
+
+print(f"Theoretical average number of packets in the system:  {rho  / (1 - rho)}")

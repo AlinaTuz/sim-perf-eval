@@ -7,141 +7,120 @@ from scipy.stats import norm
 
 rng = np.random.Generator(np.random.MT19937(np.random.SeedSequence(1234)))
 
-# Poisson event generator
-
-def poisson_events(lam, n):
-    inter_arrival_times = rng.exponential(scale=1/lam, size=n)
-    arrival_times = inter_arrival_times.cumsum()
-    return arrival_times
-
 # M/M/1 simulator
 
 class MM1:
     clock = 0
-    last_clock = 0
     events = []
 
     busy = 0
-    packets = []
-    nb_in_queue = 0
+    queue = 0
 
     times = []
     nbs_packets = []
 
     # Initialization routine
 
-    def init_simulation(self, nb_packets, rate_arrivals=1, rate_departures=2):
+    def init_simulation(self, arrival_rate=1):
         # Initialization of clock
         self.clock = 0
-        self.last_clock = 0
 
         # Initialization of event queue
-        arrivals = poisson_events(rate_arrivals, nb_packets)
-        departures = poisson_events(rate_departures, nb_packets)
-
-        # print(arrivals)
-        # print(departures)
-
-        for a in arrivals:
-            self.events.append((a, 'arrival'))
-
-        for d in departures:
-            self.events.append((d, 'departure'))
-
+        self.events = [(rng.exponential(arrival_rate), 'arrival')]
         self.events.sort()
-
-        # print(self.events)
 
         # Initialization of system state
         self.busy = 0 # The server is free
         self.packets = []
-        self.nb_in_queue = 0
+        self.queue = 0
 
         # Initialization of statistical counters
         self.times = []
         self.nbs_packets = []
 
+    # Report generator
+
+    def report_generator(self, display):
+        print(self.times)
+        print(self.nbs_packets)
+
+        # Compute estimates of interest
+        
+        # Write report
+        if display:
+            plt.bar(x=self.times, height=self.nbs_packets, width=0.5)
+            plt.title('Evolution of the number of packets in the system over time')
+            plt.xlabel('Time')
+            plt.ylabel('Number of packets in the system (server + queue)')
+            plt.grid(True)
+            plt.show()
+
     # Simulation executive
 
-    def run_simulation(self, nb_packets, rate_arrivals=1, rate_departures=2):
+    def run_simulation(self, max_time, arrival_rate=1, departure_rate=2, display=False):
         # Invoke initialization routine
-        self.init_simulation(nb_packets, rate_arrivals, rate_departures)
+        self.init_simulation(arrival_rate)
 
         # Loop
-        while len(self.events) != 0:
+        while self.clock < max_time:
             # Invoke timing routine
             i = self.events.pop(0)
             self.clock = i[0]
 
             # Invoke event routine i
             if i[1] == 'arrival':
-                self.packet_arrival()
+                self.packet_arrival(arrival_rate, departure_rate)
             elif i[1] == 'departure':
-                self.packet_departure()
+                self.packet_departure(arrival_rate, departure_rate)
+
+            print(self.events)
 
         # Report generator
-        self.report_generator(nb_packets)
-
-    # End routine & Report generator
-
-    def report_generator(self, nb_packets):
-        # Update statistical counters
-
-        self.times.append(self.clock)
-        self.nbs_packets.append(self.busy + self.nb_in_queue)
-
-        print(self.times)
-        print(self.nbs_packets)
-
-        # Compute estimates of interest
-        
-
-        # Write report
-
-        plt.bar(x=self.times, height=self.nbs_packets, width=0.1)
-        plt.title('Histogram of Detrended Data')
-        plt.xlabel('Residual Value')
-        plt.ylabel('Frequency')
-        plt.grid(True)
-
-        plt.tight_layout()
-        plt.show()
-        
-        pass
+        return self.report_generator(display)
 
     # Event routines
 
-    def packet_arrival(self):
-        # Update statistical counters
+    def packet_arrival(self, arrival_rate, departure_rate):
+        # Schedule next arrival
+        self.events.append((self.clock + rng.exponential(arrival_rate), 'arrival'))
+        self.events.sort()
 
+        # Update statistical counters
         self.times.append(self.clock)
-        self.nbs_packets.append(self.busy + self.nb_in_queue)
+        self.nbs_packets.append(self.busy + self.queue)
 
         # Update system state
-
-        self.packets.append(self.clock)
-
         if self.busy:
-            self.nb_in_queue += 1
+            self.queue += 1
         else:
-            self.busy = 1
+            self.busy += 1
 
-    def packet_departure(self):
+            # Schedule next departure
+            self.events.append((self.clock + rng.exponential(departure_rate), 'departure'))
+            self.events.sort()
+
+        print(self.busy, " ", self.queue)
+
+    def packet_departure(self, arrival_rate, departure_rate):
         # Update statistical counters
-
         self.times.append(self.clock)
-        self.nbs_packets.append(self.busy + self.nb_in_queue)
+        self.nbs_packets.append(self.queue)
 
         # Update system state
+        if self.queue <= 0:
+            self.busy -= 1
+        else:
+            self.queue -= 1
 
-        if self.busy: # There is at least one packet in service
+            # Schedule next departure
+            self.events.append((self.clock + rng.exponential(departure_rate), 'departure'))
+            self.events.sort()
 
-            if self.nb_in_queue == 0:
-                self.busy = 0
-            else:
-                self.nb_in_queue -= 1
+        print(self.busy, " ", self.queue)
 
-            self.packets.pop(0)
+# Example on one run
 
 sim = MM1()
-sim.run_simulation(1000, 1, 2)
+sim.run_simulation(max_time=1000, arrival_rate=1, departure_rate=2, display=True)
+
+# Computation of the average number of packets in the system

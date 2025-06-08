@@ -127,18 +127,18 @@ mu = 2
 # Example on one run
 
 sim = MM1()
-avg_packets = sim.run_simulation(max_time=1000, arrival_rate=lam, departure_rate=mu, display=True)
+avg_packets = sim.run_simulation(max_time=2000, arrival_rate=lam, departure_rate=mu, display=True)
 
 # Computation of the average number of packets in the system
 
 z = norm.ppf(0.975)  # 95% CI z-value
 
-nb_runs = 10000
+nb_runs = 1000
 avg_nb_packets = []
 
 for _ in range(nb_runs):
     sim = MM1()
-    avg_nb_packets.append(sim.run_simulation(max_time=1000, arrival_rate=lam, departure_rate=mu, display=False))
+    avg_nb_packets.append(sim.run_simulation(max_time=2000, arrival_rate=lam, departure_rate=mu, display=False))
 
 mean = np.mean(avg_nb_packets)
 std_err = np.std(avg_nb_packets, ddof=1) / np.sqrt(nb_runs)

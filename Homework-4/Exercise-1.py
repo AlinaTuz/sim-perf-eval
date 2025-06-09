@@ -14,6 +14,7 @@ class MM1:
     events = []
 
     busy = 0
+    packets = []
     queue = 0
 
     times = []
@@ -96,6 +97,8 @@ class MM1:
         self.nbs_packets.append(self.busy + self.queue)
 
         # Update system state
+        self.packets.append(self.clock)
+
         if self.busy:
             self.queue += 1
         else:
@@ -119,6 +122,8 @@ class MM1:
             # Schedule next departure
             self.events.append((self.clock + rng.exponential(1/departure_rate), 'departure'))
             self.events.sort()
+
+        self.packets.pop(0)
 
 
 lam = 1

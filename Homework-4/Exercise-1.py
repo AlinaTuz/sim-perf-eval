@@ -41,14 +41,11 @@ class MM1:
     # Report generator
 
     def report_generator(self, display):
-        # print(self.times)
-        # print(self.nbs_packets)
-
         # Compute estimates of interest
 
         avg_packets = self.nbs_packets[0] * self.times[0]
 
-        for i in range(1, len(self.times)):
+        for i in range(1, len(self.nbs_packets)):
             avg_packets += self.nbs_packets[i] * (self.times[i] - self.times[i-1])
         
         # Write report
@@ -78,9 +75,7 @@ class MM1:
             if i[1] == 'arrival':
                 self.packet_arrival(arrival_rate, departure_rate)
             elif i[1] == 'departure':
-                self.packet_departure(departure_rate)
-
-            #print(self.events)
+                self.packet_departure(arrival_rate, departure_rate)
 
         # Report generator
         return self.report_generator(display)
@@ -108,10 +103,10 @@ class MM1:
             self.events.append((self.clock + rng.exponential(1/departure_rate), 'departure'))
             self.events.sort()
 
-    def packet_departure(self, departure_rate):
+    def packet_departure(self, arrival_rate, departure_rate):
         # Update statistical counters
         self.times.append(self.clock)
-        self.nbs_packets.append(self.queue)
+        self.nbs_packets.append(self.busy + self.queue)
 
         # Update system state
         if self.queue <= 0:
@@ -132,7 +127,7 @@ mu = 2
 # Example on one run
 
 sim = MM1()
-avg_packets = sim.run_simulation(max_time=2000, arrival_rate=lam, departure_rate=mu, display=True)
+avg_packets = sim.run_simulation(max_time=100, arrival_rate=lam, departure_rate=mu, display=True)
 
 # Computation of the average number of packets in the system
 

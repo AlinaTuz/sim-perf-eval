@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from scipy.stats import norm
 from time import time
 
 import sklearn.datasets
@@ -43,8 +44,10 @@ classifiers = [ # The following parameters may need to be fine-tuned
 
 # Building a linearly separable dataset (Can be modified)
 
+nb_dimensions = 10
+
 X, y = sklearn.datasets.make_classification(
-    n_features=2, n_redundant=0, n_informative=2, random_state=1, n_clusters_per_class=1
+    n_features=nb_dimensions, n_redundant=0, n_informative=nb_dimensions, random_state=1, n_clusters_per_class=1
 )
 
 rng = np.random.RandomState(2)
@@ -54,16 +57,22 @@ linearly_separable = (X, y)
 
 # Definition of some datasets (May need to be modified)
 
+nb_datasets = 100
+
 datasets = [
-    sklearn.datasets.make_moons(noise=0.3, random_state=0),
-    sklearn.datasets.make_circles(noise=0.2, factor=0.5, random_state=1),
-    linearly_separable
+    sklearn.datasets.make_moons(noise=0.3, random_state=i)
+    for i in range(nb_datasets)
 ]
+
+# We want to compute the average scores and times of execution
+
+scores = [[] for _ in range(len(classifiers))]
+times = [[] for _ in range(len(classifiers))]
 
 # Iteration over datasets
 
 for ds_count, ds in enumerate(datasets):
-    print(f"====== Dataset #{ds_count + 1} ======")
+    # print(f"====== Dataset #{ds_count + 1} ======")
 
     # We preprocess our dataset and we split it into training and test part
 
@@ -74,8 +83,8 @@ for ds_count, ds in enumerate(datasets):
 
     # Iteration over classifiers
 
-    for name, clf in zip(names, classifiers):
-        print(f"--- {name} ---")
+    for clf_count, clf in enumerate(classifiers):
+        # print(f"--- {name} ---")
 
         start_time = time()
 
@@ -85,5 +94,29 @@ for ds_count, ds in enumerate(datasets):
 
         end_time = time()
 
-        print(f"Obtained score: {score}")
-        print(f"Execution time: {end_time - start_time}")
+        scores[clf_count].append(score)
+        times[clf_count].append(end_time - start_time)
+
+        # print(f"Obtained score: {score}")
+        # print(f"Execution time: {end_time - start_time}")
+
+# Results
+
+z = norm.ppf(0.975)  # 95% CI z-value
+
+for i in range(len(classifiers)):
+    print(f"===== {names[i]} =====")
+
+    scores_mean = np.mean(scores[i])
+    scores_std_err = np.std(scores[i], ddof=1) / np.sqrt(nb_datasets)
+    scores_ci = (scores_mean - z * scores_std_err, scores_mean + z * scores_std_err)
+
+    print(f"Average score: {scores_mean}")
+    print(f"--> Confidence interval: {scores_ci}")
+
+    times_mean = np.mean(times[i])
+    times_std_err = np.std(times[i], ddof=1) / np.sqrt(nb_datasets)
+    times_ci = (times_mean - z * times_std_err, times_mean + z * times_std_err)
+
+    print(f"Average execution time: {times_mean}")
+    print(f"--> Confidence interval: {times_ci}")

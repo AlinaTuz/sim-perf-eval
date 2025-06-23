@@ -60,7 +60,8 @@ linearly_separable = (X, y)
 nb_datasets = 100
 
 datasets = [
-    sklearn.datasets.make_moons(noise=0.3, random_state=i)
+    #sklearn.datasets.make_moons(noise=0.3, random_state=i)
+    sklearn.datasets.make_circles(noise=0.2, factor=0.5, random_state=i)
     for i in range(nb_datasets)
 ]
 

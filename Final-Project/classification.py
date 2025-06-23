@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-import sklearn
+from time import time
+
 import sklearn.datasets
 import sklearn.ensemble
 import sklearn.model_selection
@@ -76,8 +77,13 @@ for ds_count, ds in enumerate(datasets):
     for name, clf in zip(names, classifiers):
         print(f"--- {name} ---")
 
+        start_time = time()
+
         clf = sklearn.pipeline.make_pipeline(sklearn.preprocessing.StandardScaler(), clf)
         clf.fit(X_train, y_train)
-
         score = clf.score(X_test, y_test)
-        print(score)
+
+        end_time = time()
+
+        print(f"Obtained score: {score}")
+        print(f"Execution time: {end_time - start_time}")

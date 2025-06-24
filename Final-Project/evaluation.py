@@ -26,9 +26,9 @@ def confusion(data):
                 fp += 1
         else:
             if actual_value:
-                tn += 1
-            else:
                 fn += 1
+            else:
+                tn += 1
 
     return tp, fn, fp, tn
 
@@ -36,8 +36,8 @@ def confusion(data):
 # Accuracy
 
 def accuracy(data):
-    tp, _, _, _ = confusion(data)
-    return tp / len(data)
+    tp, _, _, tn = confusion(data)
+    return (tp + tn) / len(data)
 
 # Precision
 

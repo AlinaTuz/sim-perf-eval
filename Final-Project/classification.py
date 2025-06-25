@@ -6,6 +6,7 @@ from time import time
 
 import sklearn.datasets
 import sklearn.ensemble
+import sklearn.metrics
 import sklearn.model_selection
 import sklearn.naive_bayes
 import sklearn.neighbors
@@ -67,14 +68,16 @@ datasets = [
 
 # We want to compute the average scores and times of execution
 
-scores = [[] for _ in range(len(classifiers))]
+accuracies = [[] for _ in range(len(classifiers))]
+precisions = [[] for _ in range(len(classifiers))]
+recalls = [[] for _ in range(len(classifiers))]
+f1s = [[] for _ in range(len(classifiers))]
+
 times = [[] for _ in range(len(classifiers))]
 
 # Iteration over datasets
 
 for ds_count, ds in enumerate(datasets):
-    # print(f"====== Dataset #{ds_count + 1} ======")
-
     # We preprocess our dataset and we split it into training and test part
 
     X, y = ds
@@ -85,35 +88,67 @@ for ds_count, ds in enumerate(datasets):
     # Iteration over classifiers
 
     for clf_count, clf in enumerate(classifiers):
-        # print(f"--- {name} ---")
-
         start_time = time()
 
+        # Fitting the model
         clf = sklearn.pipeline.make_pipeline(sklearn.preprocessing.StandardScaler(), clf)
         clf.fit(X_train, y_train)
-        score = clf.score(X_test, y_test)
+
+        # Predictions
+        y_pred = clf.predict(X_test)
 
         end_time = time()
 
-        scores[clf_count].append(score)
-        times[clf_count].append(end_time - start_time)
+        # Computation of metrics
+        accuracy = sklearn.metrics.accuracy_score(y_test, y_pred)
+        precision = sklearn.metrics.precision_score(y_test, y_pred, average='binary', zero_division=0.0)
+        recall = sklearn.metrics.recall_score(y_test, y_pred)
+        f1 = sklearn.metrics.f1_score(y_test, y_pred)
 
-        # print(f"Obtained score: {score}")
-        # print(f"Execution time: {end_time - start_time}")
+        accuracies[clf_count].append(accuracy)
+        precisions[clf_count].append(precision)
+        recalls[clf_count].append(recall)
+        f1s[clf_count].append(f1)
+
+        times[clf_count].append(end_time - start_time)
 
 # Results
 
 z = norm.ppf(0.975)  # 95% CI z-value
 
 for i in range(len(classifiers)):
-    print(f"===== {names[i]} =====")
+    print(f"========== {names[i]} ==========")
+    print()
 
-    scores_mean = np.mean(scores[i])
-    scores_std_err = np.std(scores[i], ddof=1) / np.sqrt(nb_datasets)
-    scores_ci = (scores_mean - z * scores_std_err, scores_mean + z * scores_std_err)
+    a_mean = np.mean(accuracies[i])
+    a_std_err = np.std(accuracies[i], ddof=1) / np.sqrt(nb_datasets)
+    a_ci = (a_mean - z * a_std_err, a_mean + z * a_std_err)
 
-    print(f"Average score: {scores_mean}")
-    print(f"--> Confidence interval: {scores_ci}")
+    print(f"Average accuracy: {a_mean}")
+    print(f"--> Confidence interval: {a_ci}")
+
+    p_mean = np.mean(precisions[i])
+    p_std_err = np.std(precisions[i], ddof=1) / np.sqrt(nb_datasets)
+    p_ci = (p_mean - z * p_std_err, p_mean + z * p_std_err)
+
+    print(f"Average precision: {p_mean}")
+    print(f"--> Confidence interval: {p_ci}")
+
+    r_mean = np.mean(recalls[i])
+    r_std_err = np.std(recalls[i], ddof=1) / np.sqrt(nb_datasets)
+    r_ci = (r_mean - z * r_std_err, r_mean + z * r_std_err)
+
+    print(f"Average recall: {r_mean}")
+    print(f"--> Confidence interval: {r_ci}")
+
+    f_mean = np.mean(f1s[i])
+    f_std_err = np.std(f1s[i], ddof=1) / np.sqrt(nb_datasets)
+    f_ci = (f_mean - z * f_std_err, f_mean + z * f_std_err)
+
+    print(f"Average F1-score: {f_mean}")
+    print(f"--> Confidence interval: {f_ci}")
+
+    print()
 
     times_mean = np.mean(times[i])
     times_std_err = np.std(times[i], ddof=1) / np.sqrt(nb_datasets)
@@ -121,3 +156,5 @@ for i in range(len(classifiers)):
 
     print(f"Average execution time: {times_mean}")
     print(f"--> Confidence interval: {times_ci}")
+
+    print()

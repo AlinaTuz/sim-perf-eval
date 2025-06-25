@@ -120,32 +120,44 @@ for i in range(len(classifiers)):
     print(f"========== {names[i]} ==========")
     print()
 
+    # Accuracy
+
     a_mean = np.mean(accuracies[i])
     a_std_err = np.std(accuracies[i], ddof=1) / np.sqrt(nb_datasets)
     a_ci = (a_mean - z * a_std_err, a_mean + z * a_std_err)
 
     print(f"Average accuracy: {a_mean}")
+    print(f"Standard deviation of accuracy: {a_std_err}")
     print(f"--> Confidence interval: {a_ci}")
+
+    # Precision
 
     p_mean = np.mean(precisions[i])
     p_std_err = np.std(precisions[i], ddof=1) / np.sqrt(nb_datasets)
     p_ci = (p_mean - z * p_std_err, p_mean + z * p_std_err)
 
     print(f"Average precision: {p_mean}")
+    print(f"Standard deviation of precision: {p_std_err}")
     print(f"--> Confidence interval: {p_ci}")
+
+    # Recall
 
     r_mean = np.mean(recalls[i])
     r_std_err = np.std(recalls[i], ddof=1) / np.sqrt(nb_datasets)
     r_ci = (r_mean - z * r_std_err, r_mean + z * r_std_err)
 
     print(f"Average recall: {r_mean}")
+    print(f"Standard deviation of recall: {r_std_err}")
     print(f"--> Confidence interval: {r_ci}")
+
+    # F1-score
 
     f_mean = np.mean(f1s[i])
     f_std_err = np.std(f1s[i], ddof=1) / np.sqrt(nb_datasets)
     f_ci = (f_mean - z * f_std_err, f_mean + z * f_std_err)
 
     print(f"Average F1-score: {f_mean}")
+    print(f"Standard deviation of F1-score: {f_std_err}")
     print(f"--> Confidence interval: {f_ci}")
 
     print()
@@ -155,6 +167,7 @@ for i in range(len(classifiers)):
     times_ci = (times_mean - z * times_std_err, times_mean + z * times_std_err)
 
     print(f"Average execution time: {times_mean}")
+    print(f"Standard deviation of execution time: {times_std_err}")
     print(f"--> Confidence interval: {times_ci}")
 
     print()

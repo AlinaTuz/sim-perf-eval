@@ -82,7 +82,7 @@ for ds_count, ds in enumerate(datasets):
 
     X, y = ds
     X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
-        X, y, test_size=0.4, random_state=44
+        X, y, test_size=0.4, random_state=ds_count
     )
 
     # Iteration over classifiers

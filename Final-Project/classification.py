@@ -177,12 +177,18 @@ for i in range(len(classifiers)):
 
 plt.figure()
 
-x = range(1, len(names)+1)
+x = 1 + np.arange(len(names))
+
+accuracies = np.array(accuracies).transpose()
+precisions = np.array(precisions).transpose()
+recalls = np.array(recalls).transpose()
+f1s = np.array(f1s).transpose()
 
 plt.subplot(2, 1, 1)
 plt.boxplot(accuracies, labels=names,
             boxprops={'color': 'blue'}, medianprops={'color': 'red'},
             flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
+plt.errorbar(x, np.mean(accuracies, axis=0), yerr=np.std(accuracies, axis=0), color='green')
 plt.title('Box Plot of Accuracy with Different Classifiers')
 plt.ylabel('Accuracy')
 plt.grid(True, linestyle='--', alpha=0.6)
@@ -191,6 +197,7 @@ plt.subplot(2, 1, 2)
 plt.boxplot(f1s, labels=names,
             boxprops={'color': 'blue'}, medianprops={'color': 'red'},
             flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
+plt.errorbar(x, np.mean(f1s, axis=0), yerr=np.std(f1s, axis=0), color='green')
 plt.title('Box Plot of F1-Score with Different Classifiers')
 plt.ylabel('F1-score')
 plt.grid(True, linestyle='--', alpha=0.6)

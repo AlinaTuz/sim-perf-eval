@@ -24,8 +24,8 @@ import sklearn.tree
 names = [
     "Decision Tree",
     "Random Forest",
-    "Linear Support Vector Machine",
-    "RBF Support Vector Machine",
+    "Linear SVM",
+    "RBF SVM",
     "K-Nearest Neighbors",
     "Naive Bayes",
     "Neural Network"
@@ -171,3 +171,28 @@ for i in range(len(classifiers)):
     print(f"--> Confidence interval: {times_ci}")
 
     print()
+
+# Plotting box plots and error bars
+# (Accuracies, F1-scores)
+
+plt.figure()
+
+x = range(1, len(names)+1)
+
+plt.subplot(2, 1, 1)
+plt.boxplot(accuracies, labels=names,
+            boxprops={'color': 'blue'}, medianprops={'color': 'red'},
+            flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
+plt.title('Box Plot of Accuracy with Different Classifiers')
+plt.ylabel('Accuracy')
+plt.grid(True, linestyle='--', alpha=0.6)
+
+plt.subplot(2, 1, 2)
+plt.boxplot(f1s, labels=names,
+            boxprops={'color': 'blue'}, medianprops={'color': 'red'},
+            flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
+plt.title('Box Plot of F1-Score with Different Classifiers')
+plt.ylabel('F1-score')
+plt.grid(True, linestyle='--', alpha=0.6)
+
+plt.show()

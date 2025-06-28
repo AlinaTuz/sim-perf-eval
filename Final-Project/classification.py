@@ -58,7 +58,7 @@ linearly_separable = (X, y)
 
 # Definition of some datasets (May need to be modified)
 
-nb_datasets = 100
+nb_datasets = 200
 
 datasets = [
     #sklearn.datasets.make_moons(noise=0.3, random_state=i)
@@ -177,29 +177,35 @@ for i in range(len(classifiers)):
 
 plt.figure()
 
-x = 1 + np.arange(len(names))
-
 accuracies = np.array(accuracies).transpose()
 precisions = np.array(precisions).transpose()
 recalls = np.array(recalls).transpose()
 f1s = np.array(f1s).transpose()
 
-plt.subplot(2, 1, 1)
-plt.boxplot(accuracies, labels=names,
+plt.subplot(2, 2, 1)
+plt.boxplot(accuracies, labels=names, notch=True,
             boxprops={'color': 'blue'}, medianprops={'color': 'red'},
             flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
-plt.errorbar(x, np.mean(accuracies, axis=0), yerr=np.std(accuracies, axis=0), color='green')
 plt.title('Box Plot of Accuracy with Different Classifiers')
 plt.ylabel('Accuracy')
 plt.grid(True, linestyle='--', alpha=0.6)
 
-plt.subplot(2, 1, 2)
-plt.boxplot(f1s, labels=names,
+plt.subplot(2, 2, 2)
+plt.errorbar(names, np.mean(accuracies, axis=0), yerr=np.std(accuracies, axis=0), color='green')
+plt.title('Error Bar of Accuracy with Different Classifiers')
+plt.grid(True, linestyle='--', alpha=0.6)
+
+plt.subplot(2, 2, 3)
+plt.boxplot(f1s, labels=names, notch=True,
             boxprops={'color': 'blue'}, medianprops={'color': 'red'},
             flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
-plt.errorbar(x, np.mean(f1s, axis=0), yerr=np.std(f1s, axis=0), color='green')
 plt.title('Box Plot of F1-Score with Different Classifiers')
 plt.ylabel('F1-score')
+plt.grid(True, linestyle='--', alpha=0.6)
+
+plt.subplot(2, 2, 4)
+plt.errorbar(names, np.mean(f1s, axis=0), yerr=np.std(f1s, axis=0), color='green')
+plt.title('Error Bar of F1-Score with Different Classifiers')
 plt.grid(True, linestyle='--', alpha=0.6)
 
 plt.show()

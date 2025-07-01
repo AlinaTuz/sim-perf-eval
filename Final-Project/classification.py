@@ -79,10 +79,11 @@ times = [[] for _ in range(len(classifiers))]
 
 for ds_count, ds in enumerate(datasets):
     # We preprocess our dataset and we split it into training and test part
+    current_test_size = np.random.uniform(0.2, 0.5) # Generates a random float between 0.2 and 0.5
 
     X, y = ds
     X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
-        X, y, test_size=0.4, random_state=ds_count
+        X, y, test_size=current_test_size, random_state=ds_count 
     )
 
     # Iteration over classifiers
@@ -115,97 +116,150 @@ for ds_count, ds in enumerate(datasets):
 # Results
 
 z = norm.ppf(0.975)  # 95% CI z-value
+decimal_places = 4 # number of decimal places 
 
 for i in range(len(classifiers)):
-    print(f"========== {names[i]} ==========")
+    print(f"\n========== {names[i]} ==========") 
     print()
 
     # Accuracy
-
     a_mean = np.mean(accuracies[i])
     a_std_err = np.std(accuracies[i], ddof=1) / np.sqrt(nb_datasets)
-    a_ci = (a_mean - z * a_std_err, a_mean + z * a_std_err)
+    a_ci_lower = a_mean - z * a_std_err
+    a_ci_upper = a_mean + z * a_std_err
 
-    print(f"Average accuracy: {a_mean}")
-    print(f"Standard deviation of accuracy: {a_std_err}")
-    print(f"--> Confidence interval: {a_ci}")
+    print(f"Average accuracy: {a_mean:.{decimal_places}f}")
+    print(f"Standard deviation of accuracy: {a_std_err:.{decimal_places}f}")
+    print(f"--> Confidence interval: ({a_ci_lower:.{decimal_places}f}, {a_ci_upper:.{decimal_places}f})")
 
     # Precision
-
     p_mean = np.mean(precisions[i])
     p_std_err = np.std(precisions[i], ddof=1) / np.sqrt(nb_datasets)
-    p_ci = (p_mean - z * p_std_err, p_mean + z * p_std_err)
+    p_ci_lower = p_mean - z * p_std_err
+    p_ci_upper = p_mean + z * p_std_err
 
-    print(f"Average precision: {p_mean}")
-    print(f"Standard deviation of precision: {p_std_err}")
-    print(f"--> Confidence interval: {p_ci}")
+    print(f"Average precision: {p_mean:.{decimal_places}f}")
+    print(f"Standard deviation of precision: {p_std_err:.{decimal_places}f}")
+    print(f"--> Confidence interval: ({p_ci_lower:.{decimal_places}f}, {p_ci_upper:.{decimal_places}f})")
 
     # Recall
-
     r_mean = np.mean(recalls[i])
     r_std_err = np.std(recalls[i], ddof=1) / np.sqrt(nb_datasets)
-    r_ci = (r_mean - z * r_std_err, r_mean + z * r_std_err)
+    r_ci_lower = r_mean - z * r_std_err
+    r_ci_upper = r_mean + z * r_std_err
 
-    print(f"Average recall: {r_mean}")
-    print(f"Standard deviation of recall: {r_std_err}")
-    print(f"--> Confidence interval: {r_ci}")
+    print(f"Average recall: {r_mean:.{decimal_places}f}")
+    print(f"Standard deviation of recall: {r_std_err:.{decimal_places}f}")
+    print(f"--> Confidence interval: ({r_ci_lower:.{decimal_places}f}, {r_ci_upper:.{decimal_places}f})")
 
     # F1-score
-
     f_mean = np.mean(f1s[i])
     f_std_err = np.std(f1s[i], ddof=1) / np.sqrt(nb_datasets)
-    f_ci = (f_mean - z * f_std_err, f_mean + z * f_std_err)
+    f_ci_lower = f_mean - z * f_std_err
+    f_ci_upper = f_mean + z * f_std_err
 
-    print(f"Average F1-score: {f_mean}")
-    print(f"Standard deviation of F1-score: {f_std_err}")
-    print(f"--> Confidence interval: {f_ci}")
-
-    print()
+    print(f"Average F1-score: {f_mean:.{decimal_places}f}")
+    print(f"Standard deviation of F1-score: {f_std_err:.{decimal_places}f}")
+    print(f"--> Confidence interval: ({f_ci_lower:.{decimal_places}f}, {f_ci_upper:.{decimal_places}f})")
 
     times_mean = np.mean(times[i])
     times_std_err = np.std(times[i], ddof=1) / np.sqrt(nb_datasets)
-    times_ci = (times_mean - z * times_std_err, times_mean + z * times_std_err)
+    times_ci_lower = times_mean - z * times_std_err
+    times_ci_upper = times_mean + z * times_std_err
 
-    print(f"Average execution time: {times_mean}")
-    print(f"Standard deviation of execution time: {times_std_err}")
-    print(f"--> Confidence interval: {times_ci}")
+    print(f"Average execution time: {times_mean:.{decimal_places}f} seconds") # Added 'seconds'
+    print(f"Standard deviation of execution time: {times_std_err:.{decimal_places}f} seconds")
+    print(f"--> Confidence interval: ({times_ci_lower:.{decimal_places}f}, {times_ci_upper:.{decimal_places}f}) seconds")
 
     print()
 
-# Plotting box plots and error bars
-# (Accuracies, F1-scores)
-
-plt.figure()
-
+# Convert lists of lists to numpy arrays for easier plotting
 accuracies = np.array(accuracies).transpose()
 precisions = np.array(precisions).transpose()
 recalls = np.array(recalls).transpose()
 f1s = np.array(f1s).transpose()
+times_np = np.array(times).transpose() # Convert times to numpy array for plotting
 
-plt.subplot(2, 2, 1)
-plt.boxplot(accuracies, labels=names, notch=True,
-            boxprops={'color': 'blue'}, medianprops={'color': 'red'},
-            flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
-plt.title('Box Plot of Accuracy with Different Classifiers')
-plt.ylabel('Accuracy')
-plt.grid(True, linestyle='--', alpha=0.6)
+# Define a common plotting function for Box Plot and Confidence Interval Error Bar
+def plot_metric_distributions(fig_obj, axes_obj, data_metric, metric_name, names_list, nb_datasets, z_val):
+    # Set the window title
+    fig_obj.canvas.manager.set_window_title(f'{metric_name} Performance Distribution')
 
-plt.subplot(2, 2, 2)
-plt.errorbar(names, np.mean(accuracies, axis=0), yerr=np.std(accuracies, axis=0), color='green')
-plt.title('Error Bar of Accuracy with Different Classifiers')
-plt.grid(True, linestyle='--', alpha=0.6)
+    # Box Plot
+    axes_obj[0].boxplot(data_metric, tick_labels=names_list, notch=True,
+                        boxprops={'color': 'blue'}, medianprops={'color': 'red'},
+                        flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
+    axes_obj[0].set_title(f'Box Plot of {metric_name} Across Replications', fontsize=12)
+    axes_obj[0].set_ylabel(metric_name, fontsize=10)
+    axes_obj[0].grid(True, linestyle='--', alpha=0.6)
+    axes_obj[0].tick_params(axis='x', rotation=90, labelsize=9)
+    plt.setp(axes_obj[0].get_xticklabels(), ha="center")
 
-plt.subplot(2, 2, 3)
-plt.boxplot(f1s, labels=names, notch=True,
-            boxprops={'color': 'blue'}, medianprops={'color': 'red'},
-            flierprops={'marker': '+'}, whiskerprops={'linestyle': 'dotted'})
-plt.title('Box Plot of F1-Score with Different Classifiers')
-plt.ylabel('F1-score')
-plt.grid(True, linestyle='--', alpha=0.6)
+    # Confidence Interval Error Bar (formerly "Error Bar")
+    means = np.mean(data_metric, axis=0)
+    std_errors = np.std(data_metric, axis=0, ddof=1) / np.sqrt(nb_datasets) # Calculate Standard Error
+    ci_margin = z_val * std_errors # Calculate Margin of Error for 95% CI
 
-plt.subplot(2, 2, 4)
-plt.errorbar(names, np.mean(f1s, axis=0), yerr=np.std(f1s, axis=0), color='green')
-plt.title('Error Bar of F1-Score with Different Classifiers')
-plt.grid(True, linestyle='--', alpha=0.6)
+    axes_obj[1].errorbar(names_list, means, yerr=ci_margin, fmt='o', color='green', capsize=5, ecolor='red')
+    axes_obj[1].set_title(f'Mean {metric_name} with 95% Confidence Intervals', fontsize=12)
+    axes_obj[1].grid(True, linestyle='--', alpha=0.6)
+    axes_obj[1].tick_params(axis='x', rotation=90, labelsize=9)
+    plt.setp(axes_obj[1].get_xticklabels(), ha="center")
+
+    fig_obj.suptitle(f'{metric_name} Performance Distribution and CI', fontsize=16, y=0.99)
+    plt.tight_layout(rect=[0, 0.10, 1, 0.95])
+
+
+# Function for Bar Charts with 95% CI for overall comparison
+def plot_bar_chart_with_ci(data_metric, metric_name, names_list, nb_datasets, z_val):
+    fig, ax = plt.subplots(figsize=(12, 7))
+    fig.canvas.manager.set_window_title(f'{metric_name} Overall Comparison (Bar Chart)')
+
+    means = np.mean(data_metric, axis=0)
+    std_errors = np.std(data_metric, axis=0, ddof=1) / np.sqrt(nb_datasets)
+    ci_margin = z_val * std_errors
+
+    x_pos = np.arange(len(names_list))
+    
+    ax.bar(x_pos, means, yerr=ci_margin, align='center', alpha=0.7, color='skyblue', capsize=10, ecolor='black')
+    
+    ax.set_ylabel(metric_name, fontsize=10)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(names_list, rotation=45, ha="right", fontsize=9)
+    ax.set_title(f'Overall {metric_name} Comparison with 95% Confidence Intervals', fontsize=14)
+    ax.yaxis.grid(True, linestyle='--', alpha=0.6)
+    
+    # Add mean values on top of bars
+    for i, mean_val in enumerate(means):
+        ax.text(x_pos[i], mean_val + ci_margin[i] + 0.01, f'{mean_val:.{decimal_places}f}', 
+                ha='center', va='bottom', fontsize=8, color='darkblue')
+
+    plt.tight_layout()
+
+# Plotting Calls
+
+# Box plots and Confidence Interval Error Bars (for all metrics)
+fig_acc, axes_acc = plt.subplots(1, 2, figsize=(18, 7))
+plot_metric_distributions(fig_acc, axes_acc, accuracies, 'Accuracy', names, nb_datasets, z)
+
+fig_prec, axes_prec = plt.subplots(1, 2, figsize=(18, 7))
+plot_metric_distributions(fig_prec, axes_prec, precisions, 'Precision', names, nb_datasets, z)
+
+fig_rec, axes_rec = plt.subplots(1, 2, figsize=(18, 7))
+plot_metric_distributions(fig_rec, axes_rec, recalls, 'Recall', names, nb_datasets, z)
+
+fig_f1, axes_f1 = plt.subplots(1, 2, figsize=(18, 7))
+plot_metric_distributions(fig_f1, axes_f1, f1s, 'F1-score', names, nb_datasets, z)
+
+# Distribution for times if relevant
+fig_time, axes_time = plt.subplots(1, 2, figsize=(18, 7))
+plot_metric_distributions(fig_time, axes_time, times_np, 'Execution Time', names, nb_datasets, z)
+
+# Bar Charts for Overall Comparison (with 95% CI)
+plot_bar_chart_with_ci(accuracies, 'Accuracy', names, nb_datasets, z)
+plot_bar_chart_with_ci(precisions, 'Precision', names, nb_datasets, z)
+plot_bar_chart_with_ci(recalls, 'Recall', names, nb_datasets, z)
+plot_bar_chart_with_ci(f1s, 'F1-score', names, nb_datasets, z)
+plot_bar_chart_with_ci(times_np, 'Execution Time', names, nb_datasets, z)
 
 plt.show()
